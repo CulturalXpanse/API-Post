@@ -37,4 +37,9 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
+    public function ListarPorUsuario($userId) {
+        $posts = Post::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
+        return response()->json($posts);
+    }
+
 }

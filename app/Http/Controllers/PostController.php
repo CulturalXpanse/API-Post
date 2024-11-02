@@ -31,4 +31,10 @@ class PostController extends Controller
 
         return response()->json([ 'mensaje' => 'Post creado correctamente', 'post' => $post ]);
     }
+
+    public function Listar() {
+        $posts = Post::orderBy('created_at', 'desc')->get();
+        return response()->json($posts);
+    }
+
 }

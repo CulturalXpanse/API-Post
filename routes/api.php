@@ -8,3 +8,4 @@ Route::post('/posts', [PostController::class, 'Crear']);
 Route::get('/posts', [PostController::class, 'Listar']);
 Route::get('/posts/usuario/{userId}', [PostController::class, 'ListarPorUsuario']);
 Route::delete('/posts/{id}', [PostController::class, 'Eliminar']);
+Route::post('/modificar/{id}', [PostController::class, 'Modificar']);

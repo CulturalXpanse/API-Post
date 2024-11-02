@@ -53,4 +53,41 @@ class PostController extends Controller
         }
     }
 
+    public function Modificar(Request $request, $id) {
+        $post = Post::find($id);
+
+        if (!$post) {
+            return response()->json(['mensaje' => 'Post no encontrado'], 404);
+        }
+
+        if ($request->has('titulo')) {
+            $post->titulo = $request->input('titulo');
+        }
+
+        if ($request->hasFile('contenido')) {
+
+            if ($post->contenido && file_exists(public_path('imagenes/posts/' . $post->contenido))) {
+                unlink(public_path('imagenes/posts/' . $post->contenido));
+            }
+            
+            $file = $request->file('contenido');
+            $fileName = Str::random(50) . '.' . $file->getClientOriginalExtension();
+            $destinationPath = 'imagenes/posts';
+            $file->move($destinationPath, $fileName);
+
+            $post->contenido = $fileName;
+        } elseif ($request->has('contenido')) {
+            $post->contenido = $request->input('contenido');
+        }
+
+        if ($request->has('grupo_id')) {
+            $post->grupo_id = $request->input('grupo_id');
+        }
+
+        $post->save();
+
+        return response()->json(['mensaje' => 'Post modificado con éxito', 'post' => $post], 200);
+    }
+
+
 }

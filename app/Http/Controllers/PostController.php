@@ -42,4 +42,15 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
+    public function Eliminar($id) {
+        $post = Post::find($id);
+
+        if ($post) {
+            $post->delete();
+            return response()->json(['mensaje' => 'Se eliminó con éxito'], 200);
+        } else {
+            return response()->json(['mensaje' => 'Post no encontrado'], 404);
+        }
+    }
+
 }

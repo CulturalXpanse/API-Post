@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 
 
 class PostController extends Controller
@@ -34,13 +36,68 @@ class PostController extends Controller
 
     public function Listar() {
         $posts = Post::orderBy('created_at', 'desc')->get();
-        return response()->json($posts);
+    
+        $postsWithUserInfo = [];
+    
+        foreach ($posts as $post) {
+            $response = Http::get("http://localhost:8000/api/usuarios/{$post->user_id}");
+    
+            if ($response->successful()) {
+                $userInfo = $response->json();
+    
+                $postsWithUserInfo[] = [
+                    'id' => $post->id,
+                    'user_id' => $post->user_id,
+                    'grupo_id' => $post->grupo_id,
+                    'titulo' => $post->titulo,
+                    'contenido' => $post->contenido,
+                    'created_at' => Carbon::parse($post->created_at)->translatedFormat('j \d\e F \a \l\a\s h:i a'),
+                    'updated_at' => Carbon::parse($post->created_at)->translatedFormat('j \d\e F \a \l\a\s h:i a'),
+                    'user' => [
+                        'name' => $userInfo['name'],
+                        'foto_perfil' => $userInfo['foto_perfil']
+                    ]
+                ];
+            } else {
+                $postsWithUserInfo[] = $post;
+            }
+        }
+    
+        return response()->json($postsWithUserInfo);
     }
 
     public function ListarPorUsuario($userId) {
         $posts = Post::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
-        return response()->json($posts);
+    
+        $postsWithUserInfo = [];
+    
+        foreach ($posts as $post) {
+            $response = Http::get("http://localhost:8000/api/usuarios/{$post->user_id}");
+    
+            if ($response->successful()) {
+                $userInfo = $response->json();
+
+                $postsWithUserInfo[] = [
+                    'id' => $post->id,
+                    'user_id' => $post->user_id,
+                    'grupo_id' => $post->grupo_id,
+                    'titulo' => $post->titulo,
+                    'contenido' => $post->contenido,
+                    'created_at' => Carbon::parse($post->created_at)->translatedFormat('j \d\e F \a \l\a\s h:i a'),
+                    'updated_at' => Carbon::parse($post->created_at)->translatedFormat('j \d\e F \a \l\a\s h:i a'),
+                    'user' => [
+                        'name' => $userInfo['name'],
+                        'foto_perfil' => $userInfo['foto_perfil']
+                    ]
+                ];
+            } else {
+                $postsWithUserInfo[] = $post;
+            }
+        }
+    
+        return response()->json($postsWithUserInfo);
     }
+    
 
     public function Eliminar($id) {
         $post = Post::find($id);
@@ -88,6 +145,4 @@ class PostController extends Controller
 
         return response()->json(['mensaje' => 'Post modificado con éxito', 'post' => $post], 200);
     }
-
-
 }

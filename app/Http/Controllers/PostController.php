@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Like;
 use App\Models\Post;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -35,8 +36,8 @@ class PostController extends Controller
     }
 
     public function Listar() {
+        
         $posts = Post::orderBy('created_at', 'desc')->get();
-    
         $postsWithUserInfo = [];
     
         foreach ($posts as $post) {
@@ -52,7 +53,7 @@ class PostController extends Controller
                     'titulo' => $post->titulo,
                     'contenido' => $post->contenido,
                     'created_at' => Carbon::parse($post->created_at)->translatedFormat('j \d\e F \a \l\a\s h:i a'),
-                    'updated_at' => Carbon::parse($post->created_at)->translatedFormat('j \d\e F \a \l\a\s h:i a'),
+                    'updated_at' => Carbon::parse($post->updated_at)->translatedFormat('j \d\e F \a \l\a\s h:i a'),
                     'user' => [
                         'name' => $userInfo['name'],
                         'foto_perfil' => $userInfo['foto_perfil']
@@ -145,4 +146,23 @@ class PostController extends Controller
 
         return response()->json(['mensaje' => 'Post modificado con éxito', 'post' => $post], 200);
     }
+
+    public function guardarLike(Request $request) {
+        $userId = $request->user_id;
+        $postId = $request->post_id;
+
+        $likeExistente = Like::where('user_id', $userId)->where('post_id', $postId)->first();
+
+        if ($likeExistente) {
+            return response()->json(['message' => 'Ya diste like a este post'], 400);
+        }
+
+        $like = new Like();
+        $like->user_id = $userId;
+        $like->post_id = $postId;
+        $like->save();
+
+        return response()->json(['message' => 'Like guardado correctamente'], 201);
+    }
+
 }

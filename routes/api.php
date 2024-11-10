@@ -10,3 +10,8 @@ Route::get('/posts/usuario/{userId}', [PostController::class, 'ListarPorUsuario'
 Route::delete('/posts/{id}', [PostController::class, 'Eliminar']);
 Route::post('/modificar/{id}', [PostController::class, 'Modificar']);
 Route::post('/likes', [PostController::class, 'guardarLike']);
+Route::post('/likes/eliminar', [PostController::class, 'eliminarLike']);
+Route::get('/likes/{userId}', [PostController::class, 'obtenerUserLikes']);
+Route::get('/likes/todos', [PostController::class, 'obtenerTodosLosLikes']);
+Route::post('/comentarios', [PostController::class, 'guardarComentario']);
+Route::get('/posts/{postId}/comentarios', [PostController::class, 'obtenerComentarios']);

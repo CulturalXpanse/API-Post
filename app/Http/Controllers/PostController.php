@@ -201,17 +201,12 @@ class PostController extends Controller
         return response()->json(['likes' => $likes]);
     }
 
-    public function obtenerTodosLosLikes()
-    {
-        $likes = Like::select('post_id', DB::raw('COUNT(*) as total_likes'))
+    public function obtenerTodosLosLikes() {
+        $likes = Like::select('post_id', DB::raw('count(*) as total_likes'))
                     ->groupBy('post_id')
                     ->get();
-
-        if ($likes->isEmpty()) {
-            return response()->json(['likes' => []]);
-        }
-
-        return response()->json(['likes' => $likes]);
+    
+        return response()->json($likes);
     }
 
     public function guardarComentario(Request $request) {
@@ -276,6 +271,14 @@ class PostController extends Controller
         }
 
         return response()->json($comentariosWithUserInfo);
+    }
+
+    public function obtenerComentariosCount() {
+        $comentariosCount = Comentario::select('post_id', DB::raw('count(*) as comentarios_count'))
+                                      ->groupBy('post_id')
+                                      ->get();
+    
+        return response()->json($comentariosCount);
     }
 
 

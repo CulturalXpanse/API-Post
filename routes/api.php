@@ -15,3 +15,4 @@ Route::get('/likes/{userId}', [PostController::class, 'obtenerUserLikes']);
 Route::get('/likes/todos', [PostController::class, 'obtenerTodosLosLikes']);
 Route::post('/comentarios', [PostController::class, 'guardarComentario']);
 Route::get('/posts/{postId}/comentarios', [PostController::class, 'obtenerComentarios']);
+Route::get('/posts/comentarios/count', [PostController::class, 'obtenerComentariosCount']);

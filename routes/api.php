@@ -16,3 +16,6 @@ Route::get('/likes/todos', [PostController::class, 'obtenerTodosLosLikes']);
 Route::post('/comentarios', [PostController::class, 'guardarComentario']);
 Route::get('/posts/{postId}/comentarios', [PostController::class, 'obtenerComentarios']);
 Route::get('/posts/comentarios/count', [PostController::class, 'obtenerComentariosCount']);
+Route::post('/evento', [PostController::class, 'crearEvento']);
+Route::get('/elementos', [PostController::class, 'ListarPostsYEventos']);
+Route::get('/elementos/{userId}', [PostController::class, 'ListarPostsYEventosPorUsuario']);

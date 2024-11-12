@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Like;
 use App\Models\Post;
+use App\Models\Evento;
 use App\Models\Comentario;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -275,11 +276,219 @@ class PostController extends Controller
 
     public function obtenerComentariosCount() {
         $comentariosCount = Comentario::select('post_id', DB::raw('count(*) as comentarios_count'))
-                                      ->groupBy('post_id')
-                                      ->get();
+                                        ->groupBy('post_id')
+                                        ->get();
     
         return response()->json($comentariosCount);
     }
 
+    public function crearEvento(Request $request) {
+        $evento = new Evento();
+    
+        $evento->user_id = $request->input("user_id");
+        $evento->nombre = $request->input("nombre");
+        $evento->descripcion = $request->input("descripcion");
+        $evento->fecha_inicio = $request->input("fecha_inicio");
+        $evento->fecha_fin = $request->input("fecha_fin");
+    
 
+        if ($request->hasFile('foto')) {
+            $file = $request->file('foto');
+            $mimeType = $file->getMimeType();
+    
+            $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!in_array($mimeType, $allowedMimeTypes)) {
+                return response()->json(['error' => 'Solo se permiten imágenes (JPEG, PNG, GIF)'], 400);
+            }
+    
+            $fileName = Str::random(50) . '.' . $file->getClientOriginalExtension();
+            $destinationPath = 'imagenes/eventos';
+            $file->move($destinationPath, $fileName);
+    
+            $evento->foto = $fileName;
+        }
+    
+        if ($request->has("grupo_id")) {
+            $evento->grupo_id = $request->input("grupo_id");
+        }
+    
+        $evento->save();
+    
+        return response()->json(['mensaje' => 'Evento creado correctamente', 'evento' => $evento]);
+    }
+
+    public function ListarPostsYEventos() {
+        $posts = Post::orderBy('created_at', 'desc')->get();
+        $eventos = Evento::orderBy('created_at', 'desc')->get();
+        
+        $elementosConUsuario = [];
+    
+        foreach ($posts as $post) {
+            $response = Http::get("http://localhost:8000/api/usuarios/{$post->user_id}");
+            
+            if ($response->successful()) {
+                $userInfo = $response->json();
+                $elementosConUsuario[] = [
+                    'tipo' => 'post',
+                    'id' => $post->id,
+                    'user_id' => $post->user_id,
+                    'grupo_id' => $post->grupo_id,
+                    'titulo' => $post->titulo,
+                    'contenido' => $post->contenido,
+                    'created_at' => Carbon::parse($post->created_at)->format('d/m/Y h:i a'),
+                    'updated_at' => Carbon::parse($post->updated_at)->format('d/m/Y h:i a'),
+                    'user' => [
+                        'name' => $userInfo['name'],
+                        'foto_perfil' => $userInfo['foto_perfil']
+                    ]
+                ];
+            } else {
+                $elementosConUsuario[] = [
+                    'tipo' => 'post',
+                    'id' => $post->id,
+                    'user_id' => $post->user_id,
+                    'grupo_id' => $post->grupo_id,
+                    'titulo' => $post->titulo,
+                    'contenido' => $post->contenido,
+                    'created_at' => Carbon::parse($post->created_at)->format('d/m/Y h:i a'),
+                    'updated_at' => Carbon::parse($post->updated_at)->format('d/m/Y h:i a'),
+                    'user' => null
+                ];
+            }
+        }
+    
+        // Procesar los eventos
+        foreach ($eventos as $evento) {
+            $response = Http::get("http://localhost:8000/api/usuarios/{$evento->user_id}");
+            
+            if ($response->successful()) {
+                $userInfo = $response->json();
+                $elementosConUsuario[] = [
+                    'tipo' => 'evento',
+                    'id' => $evento->id,
+                    'user_id' => $evento->user_id,
+                    'grupo_id' => $evento->grupo_id,
+                    'nombre' => $evento->nombre,
+                    'descripcion' => $evento->descripcion,
+                    'foto' => $evento->foto,
+                    'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
+                    'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
+                    'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
+                    'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                    'user' => [
+                        'name' => $userInfo['name'],
+                        'foto_perfil' => $userInfo['foto_perfil']
+                    ]
+                ];
+            } else {
+                $elementosConUsuario[] = [
+                    'tipo' => 'evento',
+                    'id' => $evento->id,
+                    'user_id' => $evento->user_id,
+                    'grupo_id' => $evento->grupo_id,
+                    'nombre' => $evento->nombre,
+                    'descripcion' => $evento->descripcion,
+                    'foto' => $evento->foto,
+                    'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
+                    'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
+                    'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
+                    'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                    'user' => null
+                ];
+            }
+        }
+
+        usort($elementosConUsuario, function ($a, $b) {
+            return strtotime($b['created_at']) - strtotime($a['created_at']);
+        });
+    
+        return response()->json($elementosConUsuario);
+    }
+
+    public function ListarPostsYEventosPorUsuario($userId) {
+        $posts = Post::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
+        $eventos = Evento::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
+    
+        $elementosConUsuario = [];
+    
+        foreach ($posts as $post) {
+            $response = Http::get("http://localhost:8000/api/usuarios/{$post->user_id}");
+    
+            if ($response->successful()) {
+                $userInfo = $response->json();
+                $elementosConUsuario[] = [
+                    'tipo' => 'post',
+                    'id' => $post->id,
+                    'user_id' => $post->user_id,
+                    'grupo_id' => $post->grupo_id,
+                    'titulo' => $post->titulo,
+                    'contenido' => $post->contenido,
+                    'created_at' => Carbon::parse($post->created_at)->format('d/m/Y h:i a'),
+                    'updated_at' => Carbon::parse($post->updated_at)->format('d/m/Y h:i a'),
+                    'user' => [
+                        'name' => $userInfo['name'],
+                        'foto_perfil' => $userInfo['foto_perfil']
+                    ]
+                ];
+            } else {
+                $elementosConUsuario[] = [
+                    'tipo' => 'post',
+                    'id' => $post->id,
+                    'user_id' => $post->user_id,
+                    'grupo_id' => $post->grupo_id,
+                    'titulo' => $post->titulo,
+                    'contenido' => $post->contenido,
+                    'created_at' => Carbon::parse($post->created_at)->format('d/m/Y h:i a'),
+                    'updated_at' => Carbon::parse($post->updated_at)->format('d/m/Y h:i a'),
+                    'user' => null
+                ];
+            }
+        }
+    
+        foreach ($eventos as $evento) {
+            $response = Http::get("http://localhost:8000/api/usuarios/{$evento->user_id}");
+    
+            if ($response->successful()) {
+                $userInfo = $response->json();
+                $elementosConUsuario[] = [
+                    'tipo' => 'evento',
+                    'id' => $evento->id,
+                    'user_id' => $evento->user_id,
+                    'grupo_id' => $evento->grupo_id,
+                    'nombre' => $evento->nombre,
+                    'descripcion' => $evento->descripcion,
+                    'foto' => $evento->foto,
+                    'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
+                    'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
+                    'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
+                    'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                    'user' => [
+                        'name' => $userInfo['name'],
+                        'foto_perfil' => $userInfo['foto_perfil']
+                    ]
+                ];
+            } else {
+                $elementosConUsuario[] = [
+                    'tipo' => 'evento',
+                    'id' => $evento->id,
+                    'user_id' => $evento->user_id,
+                    'grupo_id' => $evento->grupo_id,
+                    'nombre' => $evento->nombre,
+                    'descripcion' => $evento->descripcion,
+                    'foto' => $evento->foto,
+                    'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
+                    'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
+                    'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
+                    'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                    'user' => null
+                ];
+            }
+        }
+    
+        usort($elementosConUsuario, function ($a, $b) {
+            return strtotime($b['created_at']) - strtotime($a['created_at']);
+        });
+    
+        return response()->json($elementosConUsuario);
+    }
 }

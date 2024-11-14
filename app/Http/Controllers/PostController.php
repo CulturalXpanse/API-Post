@@ -46,7 +46,6 @@ class PostController extends Controller
         return response()->json(['mensaje' => 'Post creado correctamente', 'post' => $post]);
     }
     
-
     public function Listar() {
         
         $posts = Post::orderBy('created_at', 'desc')->get();
@@ -111,7 +110,6 @@ class PostController extends Controller
         return response()->json($postsWithUserInfo);
     }
     
-
     public function Eliminar($id) {
         $post = Post::find($id);
 
@@ -190,7 +188,6 @@ class PostController extends Controller
             return response()->json(['mensaje' => 'Like no encontrado.'], 404);
         }
     }
-
     
     public function obtenerUserLikes($userId) {
         $likes = Like::where('user_id', $userId)->get(['post_id']);
@@ -320,7 +317,7 @@ class PostController extends Controller
     public function ListarPostsYEventos() {
         $posts = Post::orderBy('created_at', 'desc')->get();
         $eventos = Evento::orderBy('created_at', 'desc')->get();
-        
+    
         $elementosConUsuario = [];
     
         foreach ($posts as $post) {
@@ -335,8 +332,8 @@ class PostController extends Controller
                     'grupo_id' => $post->grupo_id,
                     'titulo' => $post->titulo,
                     'contenido' => $post->contenido,
-                    'created_at' => Carbon::parse($post->created_at)->format('d/m/Y h:i a'),
-                    'updated_at' => Carbon::parse($post->updated_at)->format('d/m/Y h:i a'),
+                    'created_at' => $post->created_at,
+                    'updated_at' => $post->updated_at,
                     'user' => [
                         'name' => $userInfo['name'],
                         'foto_perfil' => $userInfo['foto_perfil']
@@ -350,14 +347,13 @@ class PostController extends Controller
                     'grupo_id' => $post->grupo_id,
                     'titulo' => $post->titulo,
                     'contenido' => $post->contenido,
-                    'created_at' => Carbon::parse($post->created_at)->format('d/m/Y h:i a'),
-                    'updated_at' => Carbon::parse($post->updated_at)->format('d/m/Y h:i a'),
+                    'created_at' => $post->created_at,
+                    'updated_at' => $post->updated_at,
                     'user' => null
                 ];
             }
         }
     
-        // Procesar los eventos
         foreach ($eventos as $evento) {
             $response = Http::get("http://localhost:8000/api/usuarios/{$evento->user_id}");
             
@@ -371,10 +367,10 @@ class PostController extends Controller
                     'nombre' => $evento->nombre,
                     'descripcion' => $evento->descripcion,
                     'foto' => $evento->foto,
-                    'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
-                    'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
-                    'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
-                    'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                    'fecha_inicio' => $evento->fecha_inicio,
+                    'fecha_fin' => $evento->fecha_fin,
+                    'created_at' => $evento->created_at,
+                    'updated_at' => $evento->updated_at,
                     'user' => [
                         'name' => $userInfo['name'],
                         'foto_perfil' => $userInfo['foto_perfil']
@@ -389,18 +385,23 @@ class PostController extends Controller
                     'nombre' => $evento->nombre,
                     'descripcion' => $evento->descripcion,
                     'foto' => $evento->foto,
-                    'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
-                    'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
-                    'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
-                    'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                    'fecha_inicio' => $evento->fecha_inicio,
+                    'fecha_fin' => $evento->fecha_fin,
+                    'created_at' => $evento->created_at,
+                    'updated_at' => $evento->updated_at,
                     'user' => null
                 ];
             }
         }
-
+    
         usort($elementosConUsuario, function ($a, $b) {
-            return strtotime($b['created_at']) - strtotime($a['created_at']);
+            return $b['created_at']->timestamp - $a['created_at']->timestamp;
         });
+    
+        foreach ($elementosConUsuario as &$elemento) {
+            $elemento['created_at'] = Carbon::parse($elemento['created_at'])->format('d/m/Y h:i a');
+            $elemento['updated_at'] = Carbon::parse($elemento['updated_at'])->format('d/m/Y h:i a');
+        }
     
         return response()->json($elementosConUsuario);
     }
@@ -413,7 +414,7 @@ class PostController extends Controller
     
         foreach ($posts as $post) {
             $response = Http::get("http://localhost:8000/api/usuarios/{$post->user_id}");
-    
+            
             if ($response->successful()) {
                 $userInfo = $response->json();
                 $elementosConUsuario[] = [
@@ -423,8 +424,8 @@ class PostController extends Controller
                     'grupo_id' => $post->grupo_id,
                     'titulo' => $post->titulo,
                     'contenido' => $post->contenido,
-                    'created_at' => Carbon::parse($post->created_at)->format('d/m/Y h:i a'),
-                    'updated_at' => Carbon::parse($post->updated_at)->format('d/m/Y h:i a'),
+                    'created_at' => $post->created_at,
+                    'updated_at' => $post->updated_at,
                     'user' => [
                         'name' => $userInfo['name'],
                         'foto_perfil' => $userInfo['foto_perfil']
@@ -438,8 +439,8 @@ class PostController extends Controller
                     'grupo_id' => $post->grupo_id,
                     'titulo' => $post->titulo,
                     'contenido' => $post->contenido,
-                    'created_at' => Carbon::parse($post->created_at)->format('d/m/Y h:i a'),
-                    'updated_at' => Carbon::parse($post->updated_at)->format('d/m/Y h:i a'),
+                    'created_at' => $post->created_at,
+                    'updated_at' => $post->updated_at,
                     'user' => null
                 ];
             }
@@ -447,7 +448,7 @@ class PostController extends Controller
     
         foreach ($eventos as $evento) {
             $response = Http::get("http://localhost:8000/api/usuarios/{$evento->user_id}");
-    
+            
             if ($response->successful()) {
                 $userInfo = $response->json();
                 $elementosConUsuario[] = [
@@ -458,10 +459,10 @@ class PostController extends Controller
                     'nombre' => $evento->nombre,
                     'descripcion' => $evento->descripcion,
                     'foto' => $evento->foto,
-                    'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
-                    'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
-                    'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
-                    'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                    'fecha_inicio' => $evento->fecha_inicio,
+                    'fecha_fin' => $evento->fecha_fin,
+                    'created_at' => $evento->created_at,
+                    'updated_at' => $evento->updated_at,
                     'user' => [
                         'name' => $userInfo['name'],
                         'foto_perfil' => $userInfo['foto_perfil']
@@ -476,19 +477,190 @@ class PostController extends Controller
                     'nombre' => $evento->nombre,
                     'descripcion' => $evento->descripcion,
                     'foto' => $evento->foto,
-                    'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
-                    'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
-                    'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
-                    'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                    'fecha_inicio' => $evento->fecha_inicio,
+                    'fecha_fin' => $evento->fecha_fin,
+                    'created_at' => $evento->created_at,
+                    'updated_at' => $evento->updated_at,
                     'user' => null
                 ];
             }
         }
     
         usort($elementosConUsuario, function ($a, $b) {
-            return strtotime($b['created_at']) - strtotime($a['created_at']);
+            return $b['created_at']->timestamp - $a['created_at']->timestamp;
         });
     
+        foreach ($elementosConUsuario as &$elemento) {
+            $elemento['created_at'] = Carbon::parse($elemento['created_at'])->format('d/m/Y h:i a');
+            $elemento['updated_at'] = Carbon::parse($elemento['updated_at'])->format('d/m/Y h:i a');
+        }
+    
         return response()->json($elementosConUsuario);
+    }
+
+    public function ListarPostsYEventosPorAmigosYPropios($userId) {
+        $posts = DB::table('posts')
+            ->join(DB::raw("(
+                SELECT seguido_id AS user_id
+                FROM seguidores
+                WHERE seguidor_id = ?
+
+                UNION ALL
+
+                SELECT ? AS user_id
+            ) AS amigos"), 'posts.user_id', '=', 'amigos.user_id')
+            ->setBindings([$userId, $userId])
+            ->orderBy('posts.created_at', 'desc')
+            ->get();
+
+        $eventos = DB::table('eventos')
+            ->join(DB::raw("(
+                SELECT seguido_id AS user_id
+                FROM seguidores
+                WHERE seguidor_id = ?
+
+                UNION ALL
+
+                SELECT ? AS user_id
+            ) AS amigos"), 'eventos.user_id', '=', 'amigos.user_id')
+            ->setBindings([$userId, $userId])
+            ->orderBy('eventos.created_at', 'desc')
+            ->get();
+
+        $elementosConUsuario = [];
+
+        foreach ($posts as $post) {
+            $response = Http::get("http://localhost:8000/api/usuarios/{$post->user_id}");
+
+            $userInfo = $response->successful() ? $response->json() : null;
+
+            $elementosConUsuario[] = [
+                'tipo' => 'post',
+                'id' => $post->id,
+                'user_id' => $post->user_id,
+                'grupo_id' => $post->grupo_id,
+                'titulo' => $post->titulo,
+                'contenido' => $post->contenido,
+                'created_at' => $post->created_at,
+                'updated_at' => $post->updated_at,
+                'user' => $userInfo ? [
+                    'name' => $userInfo['name'],
+                    'foto_perfil' => $userInfo['foto_perfil']
+                ] : null,
+            ];
+        }
+
+        foreach ($eventos as $evento) {
+            $response = Http::get("http://localhost:8000/api/usuarios/{$evento->user_id}");
+
+            $userInfo = $response->successful() ? $response->json() : null;
+
+            $elementosConUsuario[] = [
+                'tipo' => 'evento',
+                'id' => $evento->id,
+                'user_id' => $evento->user_id,
+                'grupo_id' => $evento->grupo_id,
+                'nombre' => $evento->nombre,
+                'descripcion' => $evento->descripcion,
+                'foto' => $evento->foto,
+                'fecha_inicio' => $evento->fecha_inicio,
+                'fecha_fin' => $evento->fecha_fin,
+                'created_at' => $evento->created_at,
+                'updated_at' => $evento->updated_at,
+                'user' => $userInfo ? [
+                    'name' => $userInfo['name'],
+                    'foto_perfil' => $userInfo['foto_perfil']
+                ] : null,
+            ];
+        }
+
+        usort($elementosConUsuario, function ($a, $b) {
+            return strtotime($b['created_at']) - strtotime($a['created_at']);
+        });
+
+        foreach ($elementosConUsuario as &$elemento) {
+            $elemento['created_at'] = Carbon::parse($elemento['created_at'])->format('d/m/Y h:i a');
+            $elemento['updated_at'] = Carbon::parse($elemento['updated_at'])->format('d/m/Y h:i a');
+        }
+
+        return response()->json($elementosConUsuario);
+    }
+
+    public function EliminarEvento($id) {
+        $evento = Evento::find($id);
+
+        if ($evento) {
+            $evento->delete();
+            return response()->json(['mensaje' => 'Se eliminó con éxito'], 200);
+        } else {
+            return response()->json(['mensaje' => 'Evento no encontrado'], 404);
+        }
+    }
+
+    public function listarEventos() {
+    $eventos = Evento::orderBy('created_at', 'desc')->get();
+    $eventosConUsuario = [];
+
+    foreach ($eventos as $evento) {
+        $response = Http::get("http://localhost:8000/api/usuarios/{$evento->user_id}");
+
+        if ($response->successful()) {
+            $userInfo = $response->json();
+
+            $eventosConUsuario[] = [
+                'id' => $evento->id,
+                'user_id' => $evento->user_id,
+                'grupo_id' => $evento->grupo_id,
+                'nombre' => $evento->nombre,
+                'descripcion' => $evento->descripcion,
+                'foto' => $evento->foto,
+                'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
+                'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
+                'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
+                'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                'user' => [
+                    'name' => $userInfo['name'],
+                    'foto_perfil' => $userInfo['foto_perfil']
+                ]
+            ];
+        } else {
+            $eventosConUsuario[] = [
+                'id' => $evento->id,
+                'user_id' => $evento->user_id,
+                'grupo_id' => $evento->grupo_id,
+                'nombre' => $evento->nombre,
+                'descripcion' => $evento->descripcion,
+                'foto' => $evento->foto,
+                'fecha_inicio' => Carbon::parse($evento->fecha_inicio)->format('d/m/Y h:i a'),
+                'fecha_fin' => Carbon::parse($evento->fecha_fin)->format('d/m/Y h:i a'),
+                'created_at' => Carbon::parse($evento->created_at)->format('d/m/Y h:i a'),
+                'updated_at' => Carbon::parse($evento->updated_at)->format('d/m/Y h:i a'),
+                'user' => null
+            ];
+        }
+    }
+
+    return response()->json($eventosConUsuario);
+    }
+
+    public function obtenerLikesDeOtroUsuario($usuarioId) {
+        $posts = Post::where('user_id', $usuarioId)->pluck('id');
+
+        $likes = Like::select('post_id', DB::raw('count(*) as total_likes'))
+                    ->whereIn('post_id', $posts)
+                    ->groupBy('post_id')
+                    ->get();
+        
+        return response()->json($likes);
+    }
+
+    public function obtenerComentariosCountDeUsuario($usuarioId) {
+        $comentariosCount = Comentario::select('post_id', DB::raw('count(*) as comentarios_count'))
+                                    ->join('posts', 'posts.id', '=', 'comentarios.post_id')
+                                    ->where('posts.user_id', $usuarioId)
+                                    ->groupBy('post_id')
+                                    ->get();
+        
+        return response()->json($comentariosCount);
     }
 }

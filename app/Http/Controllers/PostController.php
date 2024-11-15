@@ -179,10 +179,12 @@ class PostController extends Controller
         $userId = $request->user_id;
         $postId = $request->post_id;
 
-        $likeExistente = Like::where('user_id', $userId)->where('post_id', $postId)->first();
+        $likeExistente = DB::table('likes')
+        ->where('user_id', $userId)
+        ->where('post_id', $postId)
+        ->delete();
 
         if ($likeExistente) {
-            $likeExistente->delete();
             return response()->json(['mensaje' => 'Like eliminado correctamente'], 200);
         } else {
             return response()->json(['mensaje' => 'Like no encontrado.'], 404);

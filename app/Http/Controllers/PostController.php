@@ -665,4 +665,14 @@ class PostController extends Controller
         
         return response()->json($comentariosCount);
     }
+
+    public function obtenerLikesPorPostIds($postIds) {
+        $postIdsArray = explode(',', $postIds);
+        $likes = Like::select('post_id', DB::raw('count(*) as total_likes'))
+        ->whereIn('post_id', $postIdsArray)
+        ->groupBy('post_id')
+        ->get();
+    
+    return response()->json($likes);
+    }
 }

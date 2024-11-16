@@ -24,3 +24,4 @@ Route::delete('/evento/{id}', [PostController::class, 'EliminarEvento']);
 Route::get('/eventos', [PostController::class, 'listarEventos']);
 Route::get('/likes/usuario/{usuarioId}', [PostController::class, 'obtenerLikesDeOtroUsuario']);
 Route::get('/posts/comentarios/count/usuario/{usuarioId}', [PostController::class, 'obtenerComentariosCountDeUsuario']);
+Route::get('/posts/likes/count/{postIds}', [PostController::class, 'obtenerLikesPorPostIds']);
